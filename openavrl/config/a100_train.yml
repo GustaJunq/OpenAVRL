@@ -1,0 +1,17 @@
+model_base: "Qwen/Qwen3.5-9B"
+generator: "ideogram-ai/ideogram-4-fp8"
+dtype: "bfloat16"
+attn: "flash_attention_2"
+lora:
+  r: 64
+  alpha: 128
+  target_modules: ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
+training:
+  batch_size: 2
+  grad_accum: 4
+  lr: 2e-4
+pipeline:
+  n_max: 3
+  num_inference_steps: 12
+  guidance_scale: 4.5
+  
