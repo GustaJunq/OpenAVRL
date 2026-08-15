@@ -2,20 +2,31 @@ import torch
 from transformers import AutoModelForCausalLM, AutoProcessor
 
 class Upsampler:
-    """Qwen3.5 9B Multimodal - adapter 'upsampler' : p0 + critique -> JSON"""
-    def __init__(self, model_id="Qwen/Qwen3.5-9B", lora_id=None, device="cuda"):
-        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.bfloat16,
-            device_map=device,
-            trust_remote_code=True,
-            attn_implementation="flash_attention_2"
-        )
+    """Qwen3.5 9B Multimodal - adapter 'upsampler' : p0 + critique -> JSON
+
+    Can accept a shared base model + processor to let another component (e.g. Evaluator)
+    reuse the same underlying weights and save VRAM.
+    """
+    def __init__(self, model_id="Qwen/Qwen3.5-9B", lora_id=None, device="cuda", model=None, processor=None, adapter_name="upsampler"):
+        # If a shared model/processor are provided, use them; otherwise load normally
+        if processor is not None and model is not None:
+            self.processor = processor
+            self.model = model
+        else:
+            self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                torch_dtype=torch.bfloat16,
+                device_map=device,
+                trust_remote_code=True,
+                attn_implementation="flash_attention_2"
+            )
+
         if lora_id:
             from peft import PeftModel
-            self.model = PeftModel.from_pretrained(self.model, lora_id, adapter_name="upsampler")
-            self.model.set_adapter("upsampler")
+            # Attach the LoRA adapter onto the (possibly shared) base model
+            self.model = PeftModel.from_pretrained(self.model, lora_id, adapter_name=adapter_name)
+            self.model.set_adapter(adapter_name)
 
     def generate_json(self, prompt: str, critique_history: str = "") -> dict:
         system = "You are the Upsampler. Output ONLY valid JSON that Ideogram 4.0 expects. No markdown."
@@ -30,4 +41,3 @@ class Upsampler:
         if not m:
             raise ValueError(f"No JSON found in: {text[:500]}")
         return json.loads(m.group(0))
-      
