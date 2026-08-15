@@ -1,5 +1,5 @@
 import time, torch
-from openavrl2 import OpenAVRL2Pipeline
+from openavrl import OpenAVRL2Pipeline
 
 pipe = OpenAVRL2Pipeline.from_pretrained(device="cuda")
 torch.cuda.reset_peak_memory_stats()
