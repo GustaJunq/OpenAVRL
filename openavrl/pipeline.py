@@ -14,12 +14,36 @@ class OpenAVRL2Pipeline:
 
     @classmethod
     def from_pretrained(cls, repo_id="SynastriaNetworks/OpenAVRL-2.0", device="cuda"):
-        # repo contains base + two LoRA adapters: adapter_upsampler / adapter_evaluator
-        U = Upsampler(model_id="Qwen/Qwen3.5-9B", lora_id=f"{repo_id}/upsampler", device=device)
-        # share base to save VRAM: load E from same base model instance
-        E = Evaluator(model_id="Qwen/Qwen3.5-9B", lora_id=f"{repo_id}/evaluator", device=device)
-        # For true 40GB sharing, you can load both LoRAs on same base via PEFT multi-adapter.
-        # Simplified here for clarity.
+        # repo contains base + LoRA adapter: we're going to load the base once
+        # and attach the SAME adapter instance for both Upsampler and Evaluator to save VRAM
+        from transformers import AutoModelForCausalLM, AutoProcessor
+        from peft import PeftModel
+
+        base_model_id = "Qwen/Qwen3.5-9B"
+
+        # load base processor + model once
+        processor = AutoProcessor.from_pretrained(base_model_id, trust_remote_code=True)
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_id,
+            torch_dtype=torch.bfloat16,
+            device_map=device,
+            trust_remote_code=True,
+            attn_implementation="flash_attention_2"
+        )
+
+        # Attach the SAME LoRA adapter (from the repo) onto the shared base model.
+        # This creates one PeftModel instance containing the adapter; we then pass
+        # that exact instance into both Upsampler and Evaluator so they reuse it.
+        shared_lora_id = f"{repo_id}/upsampler"  # use the same adapter for both
+        shared_adapter_name = "shared_upsampler"
+        shared_model = PeftModel.from_pretrained(base_model, shared_lora_id, adapter_name=shared_adapter_name)
+        shared_model.set_adapter(shared_adapter_name)
+
+        # create Upsampler and Evaluator reusing the same PeftModel + processor
+        U = Upsampler(model=shared_model, processor=processor, lora_id=None, adapter_name="upsampler")
+        E = Evaluator(model=shared_model, processor=processor, lora_id=None, adapter_name="evaluator")
+
+        # Generator remains separate
         G = IdeogramGenerator(model_id="ideogram-ai/ideogram-4-fp8", device=device)
         return cls(U, G, E)
 
@@ -72,4 +96,3 @@ class OpenAVRL2Pipeline:
             critiques=critiques,
             steps=len(critiques)
         )
-      
