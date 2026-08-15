@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openavrl"
+version = "1.0.0"
+description = "OpenAVRL - Agentic Visual Refinement Loop with Qwen3.5 9B Multimodal + Ideogram 4.0 JSON"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "SynastrIA Networks"}]
+requires-python = ">=3.10"
+dependencies = [
+  "torch>=2.3.0",
+  "transformers>=4.45.0",
+  "peft>=0.12.0",
+  "diffusers>=0.30.0",
+  "accelerate>=0.33.0",
+  "trl>=0.9.0",
+  "pillow>=10.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/GustaJunq/OpenAVRL-pkg"
