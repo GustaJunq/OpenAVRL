@@ -15,12 +15,12 @@ class OpenAVRL2Pipeline:
     @classmethod
     def from_pretrained(cls, repo_id="SynastriaNetworks/OpenAVRL-2.0", device="cuda"):
         # repo contains base + two LoRA adapters: adapter_upsampler / adapter_evaluator
-        U = Upsampler(model_id="Qwen/Qwen3.5-9B-Instruct", lora_id=f"{repo_id}/upsampler", device=device)
+        U = Upsampler(model_id="Qwen/Qwen3.5-9B", lora_id=f"{repo_id}/upsampler", device=device)
         # share base to save VRAM: load E from same base model instance
-        E = Evaluator(model_id="Qwen/Qwen3.5-9B-Instruct", lora_id=f"{repo_id}/evaluator", device=device)
+        E = Evaluator(model_id="Qwen/Qwen3.5-9B", lora_id=f"{repo_id}/evaluator", device=device)
         # For true 40GB sharing, you can load both LoRAs on same base via PEFT multi-adapter.
         # Simplified here for clarity.
-        G = IdeogramGenerator(model_id="ideogram-ai/ideogram-4.0", device=device)
+        G = IdeogramGenerator(model_id="ideogram-ai/ideogram-4-fp8", device=device)
         return cls(U, G, E)
 
     @torch.inference_mode()
