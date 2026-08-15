@@ -21,7 +21,8 @@ The system is made up of three modules:
 
 The loop runs for up to `n_max` iterations or until the Evaluator approves the result (`approved: true`). Each error it identifies feeds into the next Upsampler iteration, refining the generation JSON.
 
-The LoRA adapters (`upsampler` and `evaluator`) share the same base model (Qwen3.5 9B), which keeps the VRAM footprint of the whole pipeline relatively lean (designed around a single A100 40GB).
+You can use 2 adapters, one for the Upsampler, and other for evaluating
+Or a singular one for making both processes.
 
 The package also includes training scripts for the LoRAs (SFT) and for a **DPO** (Direct Preference Optimization) stage on the Upsampler, using preference pairs collected automatically from the refinement loop itself.
 
