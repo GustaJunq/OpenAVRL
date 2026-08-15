@@ -1,6 +1,6 @@
 """Generate DPO pairs (j_win, j_lose) using v2 visual evaluator on A100"""
 import json
-from openavrl2 import OpenAVRL2Pipeline
+from openavrl import OpenAVRL2Pipeline
 from pathlib import Path
 
 pipe = OpenAVRL2Pipeline.from_pretrained(device="cuda")
