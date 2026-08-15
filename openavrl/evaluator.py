@@ -4,19 +4,25 @@ from .schemas import Critique, BBoxError
 
 class Evaluator:
     """Qwen3.5 9B Multimodal - adapter 'evaluator' : (image, json) -> Critique"""
-    def __init__(self, model_id="Qwen/Qwen3.5-9B", lora_id=None, device="cuda"):
-        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.bfloat16,
-            device_map=device,
-            trust_remote_code=True,
-            attn_implementation="flash_attention_2"
-        )
+    def __init__(self, model_id="Qwen/Qwen3.5-9B", lora_id=None, device="cuda", model=None, processor=None, adapter_name="evaluator"):
+        # allow reuse of a shared model/processor
+        if processor is not None and model is not None:
+            self.processor = processor
+            self.model = model
+        else:
+            self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                torch_dtype=torch.bfloat16,
+                device_map=device,
+                trust_remote_code=True,
+                attn_implementation="flash_attention_2"
+            )
+
         if lora_id:
             from peft import PeftModel
-            self.model = PeftModel.from_pretrained(self.model, lora_id, adapter_name="evaluator")
-            self.model.set_adapter("evaluator")
+            self.model = PeftModel.from_pretrained(self.model, lora_id, adapter_name=adapter_name)
+            self.model.set_adapter(adapter_name)
 
     def critique(self, image, json_spec: dict) -> Critique:
         system = """You are the Evaluator. You see the generated image and its JSON.
