@@ -4,7 +4,7 @@ from transformers import AutoModelForCausalLM, AutoProcessor
 from peft import LoraConfig
 from trl import SFTTrainer
 
-model_id = "Qwen/Qwen3.5-9B-Instruct"
+model_id = "Qwen/Qwen3.5-9B"
 processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype="bfloat16", device_map="auto", trust_remote_code=True, attn_implementation="flash_attention_2")
 
