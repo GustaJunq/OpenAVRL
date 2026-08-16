@@ -11,10 +11,10 @@ class Critique(BaseModel):
     errors: List[BBoxError] = []
     refined_instruction: str = ""
     score: float = 0.0
+    thinking: Optional[str] = None  # raw <think>...</think> trace, for debugging/inspection
 
 class GenerationResult(BaseModel):
     image_path: Optional[str] = None
     final_json: dict
     critiques: List[Critique]
     steps: int
-  
